@@ -114,8 +114,10 @@ LIBTCCAPI int tcc_run(TCCState *s1, int argc, char **argv)
         int  (*bound_delete_region)(void *p);
         int i;
 
+#ifdef CONFIG_TCC_BACKTRACE
         /* set error function */
         rt_bound_error_msg = tcc_get_symbol_err(s1, "__bound_error_msg");
+#endif
         /* XXX: use .init section so that it also work in binary ? */
         bound_init = tcc_get_symbol_err(s1, "__bound_init");
         bound_exit = tcc_get_symbol_err(s1, "__bound_exit");
