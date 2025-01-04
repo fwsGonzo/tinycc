@@ -1016,7 +1016,7 @@ void gfunc_epilog(void)
     pe_add_unwind_data(start, ind, v);
 
     ind = start;
-    if (v >= 4096) {
+    if (0 && v >= 4096) {
         Sym *sym = external_helper_sym(TOK___chkstk);
         oad(0xb8, v); /* mov stacksize, %eax */
         oad(0xe8, 0); /* call __chkstk, (does the stackframe too) */
