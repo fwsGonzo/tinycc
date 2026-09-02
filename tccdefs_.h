@@ -90,8 +90,6 @@
     "#define __NO_TLS 1\n"
     "#define __RUNETYPE_INTERNAL 1\n"
 # if PTR_SIZE == 8
-    /* FIXME, __int128_t is used by setjump */
-    "#define __int128_t struct{unsigned char _dummy[16]__attribute((aligned(16)));}\n"
     "#define __SIZEOF_SIZE_T__ 8\n"
     "#define __SIZEOF_PTRDIFF_T__ 8\n"
 #else
@@ -125,6 +123,7 @@
     "#define __FINITE_MATH_ONLY__ 1\n"
     "#define _FORTIFY_SOURCE 0\n"
     //#define __has_builtin(x) 0
+    "#define _Float16 short unsigned int\n" /* fake type just for size & alignment (macOS Sequoia) */
 
 #elif defined TARGETOS_ANDROID
     "#define BIONIC_IOCTL_NO_SIGNEDNESS_OVERLOAD\n"
@@ -152,6 +151,7 @@
     "#define __PRETTY_FUNCTION__ __FUNCTION__\n"
     "#define __has_builtin(x) 0\n"
     "#define __has_feature(x) 0\n"
+    "#define __has_attribute(x) 0\n"
     /* C23 Keywords */
     "#define _Nonnull\n"
     "#define _Nullable\n"
@@ -179,11 +179,17 @@
 # endif
 #endif
 
+    /* GCC's __uint128_t appears in some Linux/OSX header files.
+       Just make it some type with same size and alignment. */
+    "struct __uint128__{char x[16];}__attribute((__aligned__(16)));\n"
+    "#define __int128_t struct __uint128__\n"
+    "#define __uint128_t struct __uint128__\n"
+
     /* __builtin_va_list */
 #if defined TCC_TARGET_X86_64
 #if !defined TCC_TARGET_PE
     /* GCC compatible definition of va_list. */
-    /* This should be in sync with the declaration in our lib/libtcc1.c */
+    /* This should be in sync with the declaration in our lib/va_list.c */
     "typedef struct{\n"
     "unsigned gp_offset,fp_offset;\n"
     "union{\n"
@@ -211,7 +217,9 @@
     "#define __builtin_va_arg(ap,type) (ap=(void*)((_tcc_align(ap,type)+sizeof(type)+3)&~3),*(type*)(ap-((sizeof(type)+3)&~3)))\n"
 
 #elif defined TCC_TARGET_ARM64
-#if defined TCC_TARGET_MACHO
+#if defined TCC_TARGET_PE
+    "typedef char*__builtin_va_list;\n"
+#elif defined TCC_TARGET_MACHO
     "typedef struct{\n"
     "void*__stack;\n"
     "}__builtin_va_list;\n"
@@ -294,11 +302,8 @@
     "__MAYBE_REDIR(void*,calloc,(__SIZE_TYPE__,__SIZE_TYPE__))\n"
     "__MAYBE_REDIR(void*,memalign,(__SIZE_TYPE__,__SIZE_TYPE__))\n"
     "__MAYBE_REDIR(void,free,(void*))\n"
-#if defined TCC_TARGET_I386 || defined TCC_TARGET_X86_64
     "__BOTH(void*,alloca,(__SIZE_TYPE__))\n"
-#else
-    "__BUILTIN(void*,alloca,(__SIZE_TYPE__))\n"
-#endif
+    "void*alloca(__SIZE_TYPE__);\n"
     "__BUILTIN(void,abort,(void))\n"
     "__BOUND(void,longjmp,())\n"
 #if !defined TCC_TARGET_PE
