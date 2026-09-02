@@ -426,6 +426,7 @@ void load(int r, SValue *sv)
 	    if (!(reg_classes[fr] & (RC_INT|RC_R11)))
 	        fr = get_reg(RC_INT);
 	    load(fr, &v1);
+	    fr |= VT_LVAL;
 	    fc = 0;
 	}
         ll = 0;
